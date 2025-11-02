@@ -3,17 +3,21 @@
 #include <vector>
 #include <cctype>
 #include <iomanip>
+#include "parser.h" // insert the parser header file
+#include "token.h" // insert the token structure header file
 using namespace std;
 
-struct Token {
-    string type;
-    string lexeme;
-    int position;
-};
+// Function to check if a lexeme is a valid lowercase single-letter identifier. 
 
 bool isSingleLetterID(const string& lexeme) {
-    return lexeme.size() == 1 && islower(lexeme[0]);
+    return lexeme.size() == 1 && islower(lexeme[0]); 
+    
+    // boolean expression that check whether the lexeme is a single lowercase letter. 
+    //lexeme.size() == 1 ensures that the lexeme consists of exactly one character, and islower(lexeme[0]) checks if that character is a lowercase letter from 'a' to 'z'.
+    // logical AND operator to ensure both condition are met. 
 }
+
+// Tokenize function to convert input string into tokens
 
 vector<Token> tokenize(const string& input, vector<Token>& invalidTokens) {
     vector<Token> tokens;
@@ -29,15 +33,16 @@ vector<Token> tokenize(const string& input, vector<Token>& invalidTokens) {
             continue;
         }
 
-        int start = i;
+        int start = i; // records the starting position of the token
 
-        // Identifiers (single-letter lowercase)
+        // call the built in function isalpha for Identifiers (single-letter lowercase)
         if (isalpha(ch)) {
             string lexeme;
             while (i < n && isalpha(input[i])) {
                 lexeme += input[i++];
             }
 
+        // call the function isSingleLetterID to check if the lexeme is a valid single-letter identifier.
             if (isSingleLetterID(lexeme))
                 tokens.push_back({"ID", lexeme, start});
             else
@@ -46,13 +51,13 @@ vector<Token> tokenize(const string& input, vector<Token>& invalidTokens) {
             continue;
         }
 
-        // Integers (multi-digit allowed)
+        // call the built in function isdigit for Integers (multi-digit allowed)
         if (isdigit(ch)) {
             string num;
-            while (i < n && isdigit(input[i])) {
+            while (i < n && isdigit(input[i])) { // continue to build the number as long as the characters are digits
                 num += input[i++];
             }
-            tokens.push_back({"INT", num, start});
+            tokens.push_back({"INT", num, start}); // create an INT token
             continue;
         }
 
@@ -126,25 +131,33 @@ void printSummary(const vector<Token>& tokens) {
 }
 
 int main() {
-    vector<string> tests = {
-        "x = (3 + 5) * 2;",
-        "ab = 3$;",
-        "y=12+z;",
-        "A = 2;",
-        "m = (4 + ) * 3;"
-    };
+      cout << "=== Lexical Analyzer ===\n";
+    cout << "Enter an expression to tokenize (type 'exit' to quit):\n";
 
-    for (const auto& src : tests) {
-        cout << "\n=============================================\n";
-        cout << "Input: " << src << "\n";
+    string input;
+    while (true) {
+        cout << "\n> ";
+        getline(cin, input);
+
+        if (input == "exit" || input == "quit") {
+            cout << "\nExiting program...\n";
+            break;
+        }
 
         vector<Token> invalidTokens;
-        vector<Token> tokens = tokenize(src, invalidTokens);
+        vector<Token> tokens = tokenize(input, invalidTokens);
 
         printTokens(tokens);
         printInvalids(invalidTokens);
         printSummary(tokens);
+        // ---- Run Syntax Analyzer ----
+        if (invalidTokens.empty()) {
+            cout << "\n=== SYNTAX ANALYSIS ===\n";
+            Parser parser(tokens);
+            parser.parse();
+        } else {
+            cout << "\nSkipping syntax analysis due to lexical errors.\n";
+        }
     }
-
     return 0;
 }
